@@ -1,0 +1,9 @@
+[Service]
+Port=8080
+ReadTimeout=10
+WriteTimeout=120
+IdleTimeout=10
+
+[Buffer]
+LoopTimeout=3
+Size=60000
