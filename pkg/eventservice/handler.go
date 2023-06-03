@@ -2,15 +2,18 @@ package eventservice
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"time"
+
+	_ "embed"
 
 	"event/internal/utils"
 	"event/pkg/eventservice/service"
 
+	"github.com/flowchartsman/swaggerui"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -19,33 +22,20 @@ type Handler struct {
 	Service *service.Service
 }
 
-// func NewHttpSrv(cnf config.Config) (*Handler, error) {
-// 	srvc, err := service.NewService(context.TODO(), cnf)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	handler := &Handler{
-// 		Service: srvc,
-// 	}
-
-// 	if err := new(HttpSrv).Run(&cnf.Service, handler.InitRoutes()); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return handler, nil
-// }
-
-func (h *Handler) InitRoutes() *mux.Router {
+func (h *Handler) InitRoutes(exposeSwagger bool) *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/events", h.storeEvents).Methods(http.MethodPost)
 	router.HandleFunc("/v1/health", h.health).Methods(http.MethodGet)
 
-	if os.Getenv("ENV") != "prod" {
-		router.HandleFunc("/v1/swagger", nil)
+	if exposeSwagger && len(swaggerSpec) > 0 {
+		router.Path("/swagger").Handler(http.RedirectHandler("/swagger/", http.StatusPermanentRedirect))
+		router.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger", swaggerui.Handler(swaggerSpec)))
 	}
 	return router
 }
+
+//go:embed swagger.json
+var swaggerSpec []byte
 
 func (h *Handler) storeEvents(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -96,8 +86,14 @@ func sendResponse(w http.ResponseWriter, err error) {
 	var code int
 
 	if err != nil {
+		var syntax = &json.SyntaxError{}
+		switch {
+		case errors.As(err, &syntax):
+			code = http.StatusBadRequest
+		default:
+			code = http.StatusInternalServerError
+		}
 		msg = err.Error()
-		code = http.StatusInternalServerError
 	} else {
 		msg = "ok"
 		code = http.StatusOK

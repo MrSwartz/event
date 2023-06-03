@@ -22,10 +22,11 @@ type Clickhouse struct {
 }
 
 type Service struct {
-	Port         int
-	ReadTimeout  int
-	WriteTimeout int
-	IdleTimeout  int
+	ExposeSwagger bool
+	Port          int
+	ReadTimeout   int
+	WriteTimeout  int
+	IdleTimeout   int
 }
 
 type Config struct {

@@ -1,4 +1,5 @@
 [Service]
+ExposeSwagger=true
 Port=8080
 ReadTimeout=10
 WriteTimeout=120
@@ -7,6 +8,7 @@ IdleTimeout=10
 [Buffer]
 LoopTimeout=10
 Size=60000
+MaxEventsToBuffer=5
 
 [Database]
 DialTimeout=10
