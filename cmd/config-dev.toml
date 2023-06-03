@@ -7,3 +7,10 @@ IdleTimeout=10
 [Buffer]
 LoopTimeout=3
 Size=60000
+
+[Database]
+DialTimeout=10
+MaxOpenConns=5
+MaxIdleConns=5
+ConnMaxLifetime=3600
+Debug=false

@@ -11,10 +11,11 @@ import (
 )
 
 type ChClient struct {
-	db driver.Conn
+	db        driver.Conn
+	tableName string
 }
 
-func NewClickHouseDB(ctx context.Context, c config.ClickHouse) (*ChClient, error) {
+func NewClickHouseDB(ctx context.Context, c config.Clickhouse) (*ChClient, error) {
 	conn, err := clickhouse.Open(&clickhouse.Options{
 		Addr: []string{fmt.Sprintf("%s:%s", c.Host, c.Port)},
 		Auth: clickhouse.Auth{
@@ -22,11 +23,11 @@ func NewClickHouseDB(ctx context.Context, c config.ClickHouse) (*ChClient, error
 			Username: c.Username,
 			Password: c.Password,
 		},
-		Debug:           false,
-		DialTimeout:     time.Second,
-		MaxOpenConns:    10,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: time.Hour,
+		Debug:           c.Debug,
+		DialTimeout:     time.Duration(c.DialTimeout) * time.Second,
+		MaxOpenConns:    c.MaxOpenConns,
+		MaxIdleConns:    c.MaxIdleConns,
+		ConnMaxLifetime: time.Duration(c.ConnMaxLifetime) * time.Second,
 	})
 
 	if err != nil {
@@ -37,5 +38,13 @@ func NewClickHouseDB(ctx context.Context, c config.ClickHouse) (*ChClient, error
 		return nil, err
 	}
 
-	return &ChClient{db: conn}, err
+	// не лучшая идея, но так проще сделать первый запуск сервиса когда ещё не создана таблица
+	if err := conn.Exec(ctx, fmt.Sprintf(createTemplate, c.DBName)); err != nil {
+		return nil, err
+	}
+
+	return &ChClient{
+		db:        conn,
+		tableName: c.DBName,
+	}, nil
 }

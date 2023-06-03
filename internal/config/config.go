@@ -2,18 +2,24 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/BurntSushi/toml"
 )
 
-type ClickHouse struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
-	DBName   string
+type Clickhouse struct {
+	Host            string
+	Port            string
+	Username        string
+	Password        string
+	DBName          string
+	DialTimeout     uint32
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime uint32
+	Debug           bool
 }
 
 type Service struct {
@@ -24,7 +30,7 @@ type Service struct {
 }
 
 type Config struct {
-	DataBase ClickHouse
+	DataBase Clickhouse
 	Buffer   Buffer
 	Service  Service
 	Mappers  Mappers
@@ -61,7 +67,7 @@ func ReadConfig() (*Config, error) {
 }
 
 func readConfig() (*Config, error) {
-	configFile := "../cmd/config-" + os.Getenv("ENV") + ".toml"
+	configFile := "../../cmd/config-" + os.Getenv("ENV") + ".toml"
 
 	file, err := readFile(configFile)
 	if err != nil {
@@ -74,21 +80,21 @@ func readConfig() (*Config, error) {
 		return nil, err
 	}
 
+	fmt.Println(cnf.DataBase, configFile)
+
 	// эти параметры лучше ложить например в Vault, но не хочется усложнять, поэтому сделал так
-	cnf.DataBase = ClickHouse{
-		DBName:   os.Getenv("CLICKHOUSE_NAME"),
-		Host:     os.Getenv("CLICKHOUSE_HOST"),
-		Password: os.Getenv("CLICKHOUSE_PASSWORD"),
-		Port:     os.Getenv("CLICKHOUSE_PORT"),
-		Username: os.Getenv("CLICKHOUSE_USER"),
-	}
+	cnf.DataBase.DBName = os.Getenv("CLICKHOUSE_NAME")
+	cnf.DataBase.Host = os.Getenv("CLICKHOUSE_HOST")
+	cnf.DataBase.Password = os.Getenv("CLICKHOUSE_PASSWORD")
+	cnf.DataBase.Port = os.Getenv("CLICKHOUSE_PORT")
+	cnf.DataBase.Username = os.Getenv("CLICKHOUSE_USER")
 
 	return &cnf, nil
 }
 
 func readMappers() (*Mappers, error) {
 
-	devos := "../mappers/device_os.json"
+	devos := "../../mappers/device_os.json"
 	file, err := readFile(devos)
 	if err != nil {
 		return nil, err
@@ -99,7 +105,7 @@ func readMappers() (*Mappers, error) {
 		return nil, err
 	}
 
-	events := "../mappers/events.json"
+	events := "../../mappers/events.json"
 	file, err = readFile(events)
 	if err != nil {
 		return nil, err
@@ -110,7 +116,7 @@ func readMappers() (*Mappers, error) {
 		return nil, err
 	}
 
-	osver := "../mappers/os_version.json"
+	osver := "../../mappers/os_version.json"
 	file, err = readFile(osver)
 	if err != nil {
 		return nil, err
