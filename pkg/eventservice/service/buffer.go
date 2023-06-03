@@ -1,6 +1,7 @@
 package service
 
 import (
+	"event/internal/config"
 	"event/pkg/eventservice/service/data"
 	"sync"
 
@@ -8,14 +9,16 @@ import (
 )
 
 type buffer struct {
-	data []data.DataEventModel
-	lock sync.Mutex
+	data              []data.DataEventModel
+	lock              sync.Mutex
+	maxEventsToBuffer int
 }
 
-func newBuffer(size int) *buffer {
-	return &buffer{
-		data: make([]data.DataEventModel, 0, size),
-		lock: sync.Mutex{},
+func newBuffer(cnf config.Buffer) buffer {
+	return buffer{
+		data:              make([]data.DataEventModel, 0, cnf.Size),
+		maxEventsToBuffer: cnf.MaxEventsToBuffer,
+		lock:              sync.Mutex{},
 	}
 }
 
@@ -26,22 +29,20 @@ func (b *buffer) append(data []data.DataEventModel) {
 	logrus.Infof("appended %d objects to buffer", len(data))
 }
 
-func (b *buffer) get() []data.DataEventModel {
+func (b *buffer) extractAndFlush() []data.DataEventModel {
 	logrus.Infof("get objects from buffer")
 	b.lock.Lock()
-	defer b.lock.Unlock()
-	return b.data
-}
-
-func (b *buffer) flush() {
-	b.lock.Lock()
+	tmpBuf := b.data
 	b.data = b.data[:0]
 	b.lock.Unlock()
-	logrus.Info("buffer flushed")
+	logrus.Infof("extracted %d objects", len(tmpBuf))
+	logrus.Infof("buffer flushed")
+	return tmpBuf
 }
 
 func (b *buffer) isEmpty() bool {
 	b.lock.Lock()
-	defer b.lock.Unlock()
-	return len(b.data) == 0
+	length := len(b.data)
+	b.lock.Unlock()
+	return length == 0
 }

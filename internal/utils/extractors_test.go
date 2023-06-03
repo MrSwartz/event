@@ -18,7 +18,7 @@ func TestSplitOsAndVersion(t *testing.T) {
 		{
 			name:          "payload from request example",
 			payload:       "IOS 13.5.1",
-			os:            "IOS",
+			os:            "ios",
 			version:       "13.5.1",
 			expectedError: nil,
 		}, {
@@ -39,6 +39,12 @@ func TestSplitOsAndVersion(t *testing.T) {
 			os:            "",
 			version:       "",
 			expectedError: errors.New(`can't extract data from string: ""`),
+		}, {
+			name:          "lowercase os type with valid version",
+			payload:       "ios 13.0.1",
+			os:            "ios",
+			version:       "13.0.1",
+			expectedError: nil,
 		},
 	}
 
