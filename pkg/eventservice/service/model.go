@@ -22,6 +22,19 @@ type ServiceEventModel struct {
 }
 
 func (e ServiceEventModel) toDataModel() (*data.DataEventModel, bool) {
+	/*
+		идея такой строгой валидации заключается в идее более эффективно хранть
+		данные в бд и валидировать данные, чтобы хранить только валидные значения
+
+		вторым параметром функция возваращает bool, который нужен чтобы
+		была возможность пропустить событие так как драйвер clickhouse
+		слишком консервативный и падает в панике при попытке передать
+		невалидные значения
+
+		так же события с отсутствующими полями может внести некоторые
+		"аномалии" в данных при попытке аггрегировать их, что может
+		быть достаточно критичным
+	*/
 	clientTime, err := time.Parse("2006-01-02 15:04:05", e.ClientTime)
 	if err != nil {
 		logrus.Errorf("wrong time format clientTime: %v", e.ClientTime)
@@ -30,6 +43,16 @@ func (e ServiceEventModel) toDataModel() (*data.DataEventModel, bool) {
 
 	if ok := utils.CheckUUID(e.DeviceId); !ok {
 		logrus.Errorf("not valid UUID format: %v", e.DeviceId)
+		return nil, false
+	}
+
+	if len(e.Session) > 16 {
+		logrus.Errorf("session length must be not longer than 16 symbols")
+		return nil, false
+	}
+
+	if len(e.ParamStr) > 31 {
+		logrus.Errorf("param_str length must be not longer than 31 symbols")
 		return nil, false
 	}
 
@@ -45,13 +68,13 @@ func (e ServiceEventModel) toDataModel() (*data.DataEventModel, bool) {
 		return nil, false
 	}
 
-	osCode, ok := osVersion[version]
+	osCode, ok := osType[os]
 	if !ok {
 		logrus.Errorf("os not supported: %v", version)
 		return nil, false
 	}
 
-	versionCode, ok := osType[os]
+	versionCode, ok := osVersion[version]
 	if !ok {
 		logrus.Errorf("os version not supported: %v", versionCode)
 		return nil, false

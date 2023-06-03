@@ -84,6 +84,10 @@ func TestReadConfig(t *testing.T) {
 	require.Equal(t, 120, cnf.Service.WriteTimeout)
 	require.Equal(t, 8080, cnf.Service.Port)
 
+	require.Equal(t, 10, cnf.Buffer.LoopTimeout)
+	require.Equal(t, 5, cnf.Buffer.MaxEventsToBuffer)
+	require.Equal(t, 60000, cnf.Buffer.Size)
+
 	events := map[string]uint8{"app_start": 1, "onClose": 6, "onCreate": 4, "onDestroy": 5, "onPause": 2, "onRotate": 3, "panic": 7}
 	require.Equal(t, fmt.Sprintf("%v", events), fmt.Sprintf("%v", cnf.Mappers.Events))
 

@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 
@@ -37,8 +36,9 @@ type Config struct {
 }
 
 type Buffer struct {
-	LoopTimeout int
-	Size        int
+	LoopTimeout       int
+	Size              int
+	MaxEventsToBuffer int
 }
 
 type Mappers struct {
@@ -79,8 +79,6 @@ func readConfig() (*Config, error) {
 	if _, err := toml.Decode(string(file), &cnf); err != nil {
 		return nil, err
 	}
-
-	fmt.Println(cnf.DataBase, configFile)
 
 	// эти параметры лучше ложить например в Vault, но не хочется усложнять, поэтому сделал так
 	cnf.DataBase.DBName = os.Getenv("CLICKHOUSE_NAME")
