@@ -2,21 +2,62 @@ package data
 
 import (
 	"context"
+	"fmt"
 )
 
-const insertQuery = `INSERT INTO events (
-	client_time, 
-	server_time, 
-	device_id, 
-	session,
-	param_str, 
-	ip, 
-	sequence, 
-	param_int, 
-	device_os, 
-	device_os_version, 
-	event
-	)`
+var _ Events = (*ChClient)(nil)
+
+const (
+	/*
+		я знаю про миграции, в любом случае при изменении схемы данных придётся чтото менять в коде
+		поэтому я решил не усложнять запуск и захардкодил запрос на создание таблицы если её нету
+
+		возможные вопросы:
+
+		вопрос: почему IP адрес не представлен в виде встроенного типа в CH?
+		ответ: я понятия не имею как именно дальше будут использоваться данные,
+		поэтому решил кастить в инт + любая бд лучше работает с примитивами, чем с обёртками над данными
+
+		вопрос: почему ORDER BY ip?
+		ответ: я незнаю какие именно будут составляться запросы, поэтому выбрал произвольно
+	*/
+	createTemplate = `
+	CREATE TABLE IF NOT EXISTS %s
+	(
+		client_time 		DateTime('UTC'),
+		server_time 		DateTime('UTC'),
+		device_id 			UUID,
+		session 			FixedString(17),
+		param_str 			FixedString(32),
+		ip 					UInt32,
+		sequence 			UInt32,
+		param_int 			UInt32,
+		device_os 			UInt8,
+		device_os_version 	UInt16,
+		event 				UInt8
+	)
+	ENGINE = MergeTree
+	ORDER BY ip;
+	`
+
+	insertQuery = `
+	INSERT INTO %s (
+		client_time, 
+		server_time, 
+		device_id, 
+		session,
+		param_str, 
+		ip, 
+		sequence, 
+		param_int, 
+		device_os, 
+		device_os_version, 
+		event
+		)`
+
+	//nolint:unused
+	dropTemplate = `DROP TABLE IF EXISTS %s`
+)
 
 type Events interface {
 	Insert(ctx context.Context, events []DataEventModel) error
@@ -25,13 +66,13 @@ type Events interface {
 }
 
 func (c *ChClient) Insert(ctx context.Context, rows []DataEventModel) error {
-	batch, err := c.db.PrepareBatch(ctx, insertQuery)
+	batch, err := c.db.PrepareBatch(ctx, fmt.Sprintf(insertQuery, c.tableName))
 	if err != nil {
 		return err
 	}
 
 	for _, v := range rows {
-		batch.Append(
+		err := batch.Append(
 			v.ClientTime.UTC(),
 			v.ServerTime.UTC(),
 			v.DeviceId,
@@ -44,6 +85,10 @@ func (c *ChClient) Insert(ctx context.Context, rows []DataEventModel) error {
 			v.DeviceOsVersion,
 			v.Event,
 		)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return batch.Send()

@@ -3,6 +3,8 @@ package data
 import (
 	"context"
 	"event/internal/config"
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -10,24 +12,41 @@ import (
 )
 
 func TestInsert(t *testing.T) {
-	cnf := config.ClickHouse{
-		Host:     "127.0.0.1",
-		Port:     "9000",
-		Password: "qwerty123",
-		Username: "default",
-		DBName:   "default",
+	cnf := config.Clickhouse{
+		Host:            os.Getenv("CLICKHOUSE_HOST"),     // "127.0.0.1"
+		Port:            os.Getenv("CLICKHOUSE_PORT"),     // "9000"
+		Password:        os.Getenv("CLICKHOUSE_PASSWORD"), // "qwerty123"
+		Username:        os.Getenv("CLICKHOUSE_USER"),     // "default"
+		DBName:          os.Getenv("CLICKHOUSE_NAME"),     // "test"
+		DialTimeout:     2,
+		MaxOpenConns:    2,
+		MaxIdleConns:    2,
+		ConnMaxLifetime: 10,
+		Debug:           true,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(2)*time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	db, err := NewClickHouseDB(ctx, cnf)
 	require.NoError(t, err)
 
-	err = db.db.Ping(ctx)
+	err = db.Ping(ctx)
 	require.NoError(t, err)
 
 	defer db.CloseData()
+
+	err = db.db.Exec(
+		ctx,
+		fmt.Sprintf(createTemplate, cnf.DBName),
+	)
+	require.NoError(t, err)
+
+	defer func() {
+		err = db.db.Exec(
+			ctx,
+			fmt.Sprintf(dropTemplate, cnf.DBName),
+		)
+		require.NoError(t, err)
+	}()
 
 	event := DataEventModel{
 		ClientTime:      time.Now().UTC(),
