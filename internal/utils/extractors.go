@@ -36,5 +36,5 @@ func SplitOsAndVersion(str string) (string, string, error) {
 	if nums := strings.Split(str, "."); len(nums) != 3 {
 		return "", "", errors.New(`invalid os version format: "` + str + `"`)
 	}
-	return OsVer[0], OsVer[1], nil
+	return strings.ToLower(OsVer[0]), OsVer[1], nil
 }

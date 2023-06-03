@@ -1,0 +1,148 @@
+{
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "+ provides [API] supporting **POST** request for storing events",
+    "title": "event microservice",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Эндпоинт позволяет узнать жив ли коннект к бд",
+        "tags": [
+          "Info"
+        ],
+        "operationId": "getHealthCheck",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/HttpResponse"
+            }
+          },
+          "500": {
+            "description": "internal error",
+            "schema": {
+              "$ref": "#/definitions/HttpResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/events": {
+      "post": {
+        "description": "Принцип работы\n1. Эндпоинт принимает POST запрос и пытается его распарсить, в случае ошибки сервер вернёт код 400\n2. Происходит попытка вытащить IP из запроса, сохраняется текущее време сервера и происходит конвертация входной модели данных в\nмодель данных, которая отражает схему хранения данных в ClickHouse, в случае невалидных данных объект отбрасывается чтобы не портить данные\n3. Происходит попытка вставки данных. При **длине массива из тела запроса \u003e MaxEventsToBuffer** данные будут напрямую отправлены в ClickHouse\nи сервер вернёт HTTP код 200 при успешной вставке данных или код 500 в случае ошибки\nЕсли **MaxEventsToBuffer \u003e длины массива из тела запроса**, то данные будут отправлены в буфер, который с периодичностью **LoopTimeout**\nбудут отправляться фоновой джобой в ClickHouse, в этом случае сервер сразу после попытки вставки в буфер вернёт код 200 при наличии свободной памяти",
+        "tags": [
+          "Event"
+        ],
+        "summary": "сохраняет принятые данные в бд",
+        "operationId": "storeEvents",
+        "parameters": [
+          {
+            "name": "storeEvents",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/EventModelArray"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/HttpResponse"
+            }
+          },
+          "400": {
+            "description": "missing required parameters",
+            "schema": {
+              "$ref": "#/definitions/HttpResponse"
+            }
+          },
+          "500": {
+            "description": "internal error",
+            "schema": {
+              "$ref": "#/definitions/HttpResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "HttpResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "x-go-name": "Status"
+        },
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-package": "github.com/MrSwartz/event/pkg/eventservice"
+    },
+    "EventModelArray": {
+      "type": "array",
+      "items": {
+        "minItems": 0,
+        "type": "object",
+        "required": [
+          "client_time",
+          "device_id",
+          "device_os",
+          "session",
+          "event",
+          "param_str",
+          "sequence",
+          "param_int"
+        ],
+        "properties": {
+          "client_time": {
+            "type": "string",
+            "x-go-name": "ClientTime"
+          },
+          "device_id": {
+            "type": "string",
+            "x-go-name": "DeviceId"
+          },
+          "device_os": {
+            "type": "string",
+            "x-go-name": "DeviceOs"
+          },
+          "session": {
+            "type": "string",
+            "x-go-name": "Session"
+          },
+          "event": {
+            "type": "string",
+            "x-go-name": "Event"
+          },
+          "param_str": {
+            "type": "string",
+            "x-go-name": "ParamStr"
+          },
+          "sequence": {
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "Sequence"
+          },
+          "param_int": {
+            "type": "integer",
+            "format": "int32",
+            "x-go-name": "ParamInt"
+          }
+        }
+      }
+    }
+  }
+}

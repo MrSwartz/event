@@ -79,6 +79,7 @@ func TestReadConfig(t *testing.T) {
 	require.Equal(t, uint32(3600), cnf.DataBase.ConnMaxLifetime)
 	require.Equal(t, true, cnf.DataBase.Debug)
 
+	require.Equal(t, true, cnf.Service.ExposeSwagger)
 	require.Equal(t, 10, cnf.Service.IdleTimeout)
 	require.Equal(t, 10, cnf.Service.ReadTimeout)
 	require.Equal(t, 120, cnf.Service.WriteTimeout)
