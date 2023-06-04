@@ -12,12 +12,14 @@ type buffer struct {
 	data              []data.DataEventModel
 	lock              sync.Mutex
 	maxEventsToBuffer int
+	RetriesLeft       int
 }
 
 func newBuffer(cnf config.Buffer) buffer {
 	return buffer{
 		data:              make([]data.DataEventModel, 0, cnf.Size),
 		maxEventsToBuffer: cnf.MaxEventsToBuffer,
+		RetriesLeft:       cnf.RetriesLeft,
 		lock:              sync.Mutex{},
 	}
 }
