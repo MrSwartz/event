@@ -91,16 +91,19 @@ func (e ServiceEventModel) toDataModel() (*data.DataEventModel, bool) {
 	}
 
 	return &data.DataEventModel{
-		ClientTime:      clientTime,
-		ServerTime:      e.ServerTime,
-		DeviceId:        e.DeviceId,
-		Session:         e.Session,
-		ParamStr:        e.ParamStr,
-		Ip:              ipcode,
-		Sequence:        e.Sequence,
-		ParamInt:        e.ParamInt,
-		DeviceOs:        data.DeviceOS(osCode),
+		ClientTime: clientTime,
+		ServerTime: e.ServerTime,
+		DeviceId:   e.DeviceId,
+		Session:    e.Session,
+		ParamStr:   e.ParamStr,
+		Ip:         ipcode,
+		Sequence:   e.Sequence,
+		ParamInt:   e.ParamInt,
+		//nolint:unconvert
+		DeviceOs: data.DeviceOS(osCode),
+		//nolint:unconvert
 		DeviceOsVersion: data.DeviceOSVersion(versionCode),
-		Event:           data.EventType(eventCode),
+		//nolint:unconvert
+		Event: data.EventType(eventCode),
 	}, true
 }

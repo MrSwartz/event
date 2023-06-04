@@ -111,5 +111,7 @@ func sendResponse(w http.ResponseWriter, msg string, code int) {
 	body, _ := json.Marshal(rsp)
 
 	w.WriteHeader(code)
+
+	//nolint:errcheck
 	w.Write(body)
 }
