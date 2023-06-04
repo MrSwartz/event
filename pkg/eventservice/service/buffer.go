@@ -13,11 +13,13 @@ type buffer struct {
 	lock        sync.Mutex
 	Size        int
 	RetriesLeft int
+	closer      chan struct{}
+	isFreed     chan struct{}
 }
 
 func newBuffer(cnf config.Buffer) *buffer {
 	if cnf.Size == 0 && cnf.LoopTimeout == 0 {
-		//буфер не создан и данные будут идти напрямую в бд
+		// буфер не создан и данные будут идти напрямую в бд
 		return &buffer{
 			Size: cnf.Size,
 		}
@@ -27,6 +29,8 @@ func newBuffer(cnf config.Buffer) *buffer {
 		Size:        cnf.Size,
 		RetriesLeft: cnf.RetriesLeft,
 		lock:        sync.Mutex{},
+		closer:      make(chan struct{}),
+		isFreed:     make(chan struct{}),
 	}
 }
 
