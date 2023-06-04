@@ -64,6 +64,13 @@ func (s *Service) startLoop(ctx context.Context, timeout int) {
 				fmt.Fprintf(file, "%v", s.buffer.extractAndFlush())
 				file.Close()
 			}
+
+			if _, ok := <-s.buffer.closer; ok {
+				logrus.Info("loop stopped")
+				s.buffer.isFreed <- struct{}{}
+				return
+			}
+
 		case <-t.C:
 			if !s.buffer.isEmpty() {
 				logrus.Info("start inserting data in loop")
@@ -77,6 +84,13 @@ func (s *Service) startLoop(ctx context.Context, timeout int) {
 				logrus.Info("end inserting data in loop")
 			} else {
 				logrus.Info("buffer is empty, nothing to insert")
+			}
+
+			// чтобы не городить кучу конструкций и каналов сделал завершение так
+			if _, ok := <-s.buffer.closer; ok {
+				logrus.Info("loop stopped")
+				s.buffer.isFreed <- struct{}{}
+				return
 			}
 		}
 	}
@@ -110,7 +124,21 @@ func (s *Service) Ping(ctx context.Context) error {
 }
 
 func (s *Service) CloseData() error {
-	return s.event.CloseData()
+	// всё это сделано не очень красиво, но работает. сначала посылаем сигнал закрытия в буфер
+	// в цикле по тикеру раз в N секунд отсылаются данные, а сразу после отправки данных
+	// проверяем был ли получен сигнал на "закрытие" буфера. в этот момент данных в буфере уже нету
+	// и буфер отсылает сигнал о том, что он пустой обратно в эту же функцию и можно спокойно
+	// закрывать соединение с бд
+	s.buffer.closer <- struct{}{}
+	close(s.buffer.closer)
+
+	if _, ok := <-s.buffer.isFreed; ok {
+		close(s.buffer.isFreed)
+		return s.event.CloseData()
+	}
+
+	// сюда код зайти не должен
+	panic("data closing error")
 }
 
 func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
