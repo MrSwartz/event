@@ -85,6 +85,7 @@ func TestReadConfig(t *testing.T) {
 	require.Equal(t, 120, cnf.Service.WriteTimeout)
 	require.Equal(t, 8080, cnf.Service.Port)
 
+	require.Equal(t, 3, cnf.Buffer.RetriesLeft)
 	require.Equal(t, 10, cnf.Buffer.LoopTimeout)
 	require.Equal(t, 5, cnf.Buffer.MaxEventsToBuffer)
 	require.Equal(t, 60000, cnf.Buffer.Size)

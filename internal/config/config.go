@@ -37,6 +37,7 @@ type Config struct {
 }
 
 type Buffer struct {
+	RetriesLeft       int
 	LoopTimeout       int
 	Size              int
 	MaxEventsToBuffer int
@@ -68,7 +69,7 @@ func ReadConfig() (*Config, error) {
 }
 
 func readConfig() (*Config, error) {
-	configFile := "../../cmd/config-" + os.Getenv("ENV") + ".toml"
+	configFile := "../cmd/config-" + os.Getenv("ENV") + ".toml"
 
 	file, err := readFile(configFile)
 	if err != nil {
@@ -93,7 +94,7 @@ func readConfig() (*Config, error) {
 
 func readMappers() (*Mappers, error) {
 
-	devos := "../../mappers/device_os.json"
+	devos := "../mappers/device_os.json"
 	file, err := readFile(devos)
 	if err != nil {
 		return nil, err
@@ -104,7 +105,7 @@ func readMappers() (*Mappers, error) {
 		return nil, err
 	}
 
-	events := "../../mappers/events.json"
+	events := "../mappers/events.json"
 	file, err = readFile(events)
 	if err != nil {
 		return nil, err
@@ -115,7 +116,7 @@ func readMappers() (*Mappers, error) {
 		return nil, err
 	}
 
-	osver := "../../mappers/os_version.json"
+	osver := "../mappers/os_version.json"
 	file, err = readFile(osver)
 	if err != nil {
 		return nil, err

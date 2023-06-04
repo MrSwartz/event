@@ -2,7 +2,6 @@ package eventservice
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -62,17 +61,22 @@ func (h *Handler) storeEvents(w http.ResponseWriter, r *http.Request) {
 		// и сервис не должен ничего сохранять
 		logrus.Warnf("can't extract ip addr from response: %v", r.Header)
 		sendResponse(w, "can't extract ip addr", http.StatusInternalServerError)
+
+		// если нравится 8.8.8.8, то можно закоментить строку выше и раскоментить ниже
+		// ip = "8.8.8.8"
 	}
 
 	data := make([]service.ServiceEventModel, 0, len(incomingData))
 	for _, v := range incomingData {
 		data = append(data, *v.toServiseDataEventModel(time.Now().UTC(), ip))
 	}
-	fmt.Println(data)
 
-	err = h.Service.Insert(r.Context(), data)
-	logrus.Infof("request processed, error: %v", err)
-	sendResponse(w, err.Error(), http.StatusInternalServerError)
+	if err := h.Service.Insert(r.Context(), data); err != nil {
+		logrus.Infof("request processed with error: %v", err)
+		sendResponse(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	sendResponse(w, "ok", http.StatusOK)
 }
 
 func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
@@ -107,5 +111,7 @@ func sendResponse(w http.ResponseWriter, msg string, code int) {
 	body, _ := json.Marshal(rsp)
 
 	w.WriteHeader(code)
+
+	//nolint:errcheck
 	w.Write(body)
 }

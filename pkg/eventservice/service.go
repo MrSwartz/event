@@ -3,30 +3,60 @@ package eventservice
 import (
 	"context"
 	"event/internal/config"
-	"fmt"
-	"net/http"
-	"time"
+	"event/pkg/eventservice/service"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
-type HttpSrv struct {
-	httpSrv *http.Server
-}
+func Run() error {
+	logrus.SetFormatter(new(logrus.JSONFormatter))
 
-func (s *HttpSrv) Run(cnf *config.Service, h http.Handler) error {
-	s.httpSrv = &http.Server{
-		Addr:           fmt.Sprintf(":%d", cnf.Port),
-		Handler:        h,
-		MaxHeaderBytes: 1 << 20,
-		ReadTimeout:    time.Duration(cnf.ReadTimeout) * time.Second,
-		WriteTimeout:   time.Duration(cnf.WriteTimeout) * time.Second,
-		IdleTimeout:    time.Duration(cnf.IdleTimeout) * time.Second,
+	cnf, err := config.ReadConfig()
+	if err != nil {
+		logrus.Fatalf("can't read config: %v", err.Error())
+	}
+	logrus.Info("config loaded")
+
+	ctx := context.Background()
+
+	srvc, err := service.NewService(ctx, *cnf)
+	if err != nil {
+		logrus.Errorf("can't create service layer, error: %v", err.Error())
+		return err
 	}
 
-	// return
-	s.httpSrv.ListenAndServe()
-	return nil
-}
+	handler := &Handler{
+		Service: srvc,
+	}
 
-func (s *HttpSrv) Shutdown(ctx context.Context) error {
-	return s.httpSrv.Shutdown(ctx)
+	httpSrv := new(HttpSrv)
+	go func() {
+		if err := httpSrv.Run(&cnf.Service, handler.InitRoutes(cnf.Service.ExposeSwagger)); err != nil {
+			logrus.Errorf("can't to start http server %v", err.Error())
+			return
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	<-quit
+
+	// сначала закрываю http сервер, но не закрываю слой данных,
+	// чтобы дать шанс выгрузить данные из буфера
+	if err := httpSrv.Shutdown(ctx); err != nil {
+		logrus.Errorf("error occured on server shutting down: %s", err.Error())
+		return err
+	}
+
+	if err := handler.Service.CloseData(); err != nil {
+		logrus.Errorf("error occured on db connection close: %s", err.Error())
+		return err
+	}
+	logrus.Info("data closed")
+
+	logrus.Info("service stopped")
+	return nil
 }
