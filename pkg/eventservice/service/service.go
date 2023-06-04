@@ -84,7 +84,7 @@ func (s *Service) startLoop(ctx context.Context, timeout int) {
 
 type Service struct {
 	event  data.Events
-	buffer buffer
+	buffer *buffer
 }
 
 func (s *Service) Insert(ctx context.Context, events []ServiceEventModel) error {
@@ -95,7 +95,7 @@ func (s *Service) Insert(ctx context.Context, events []ServiceEventModel) error 
 		}
 	}
 
-	if len(ees) < s.buffer.maxEventsToBuffer {
+	if len(ees) < s.buffer.Size {
 		s.buffer.append(ees)
 		logrus.Infof("data appended to buffer: %d", len(ees))
 		return nil
@@ -119,14 +119,6 @@ func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	if cnf.Buffer.MaxEventsToBuffer == 0 {
-		cnf.Buffer.MaxEventsToBuffer = 1000
-	}
-
-	if cnf.Buffer.LoopTimeout == 0 {
-		cnf.Buffer.LoopTimeout = 10
-	}
-
 	srvc := &Service{
 		event: conn,
 
@@ -137,7 +129,11 @@ func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
 
 	initMappers(cnf.Mappers)
 
-	go srvc.startLoop(ctx, cnf.Buffer.LoopTimeout)
+	if cnf.Buffer.LoopTimeout != 0 && cnf.Buffer.Size != 0 {
+		logrus.Info("buffer initialized")
+		go srvc.startLoop(ctx, cnf.Buffer.LoopTimeout)
+	}
+
 	return srvc, nil
 }
 

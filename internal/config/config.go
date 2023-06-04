@@ -37,10 +37,9 @@ type Config struct {
 }
 
 type Buffer struct {
-	RetriesLeft       int
-	LoopTimeout       int
-	Size              int
-	MaxEventsToBuffer int
+	RetriesLeft int
+	LoopTimeout int
+	Size        int
 }
 
 type Mappers struct {

@@ -8,7 +8,6 @@ IdleTimeout=10
 [Buffer]
 LoopTimeout=10
 Size=60000
-MaxEventsToBuffer=5
 
 [Database]
 DialTimeout=10

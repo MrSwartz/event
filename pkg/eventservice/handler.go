@@ -59,11 +59,12 @@ func (h *Handler) storeEvents(w http.ResponseWriter, r *http.Request) {
 		// вероятно хэдеры были модифицированы
 		// если проблема не в хэдерах, то что то совсем не то
 		// и сервис не должен ничего сохранять
-		logrus.Warnf("can't extract ip addr from response: %v", r.Header)
-		sendResponse(w, "can't extract ip addr", http.StatusInternalServerError)
 
-		// если нравится 8.8.8.8, то можно закоментить строку выше и раскоментить ниже
-		// ip = "8.8.8.8"
+		// чтобы не хардкодить ip, можно раскоментить 2 строки ниже
+		// logrus.Warnf("can't extract ip addr from response: %v", r.Header)
+		// sendResponse(w, "can't extract ip addr", http.StatusInternalServerError)
+
+		ip = "8.8.8.8"
 	}
 
 	data := make([]service.ServiceEventModel, 0, len(incomingData))
@@ -111,7 +112,7 @@ func sendResponse(w http.ResponseWriter, msg string, code int) {
 	body, _ := json.Marshal(rsp)
 
 	w.WriteHeader(code)
-
 	//nolint:errcheck
 	w.Write(body)
+
 }
