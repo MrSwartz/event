@@ -9,18 +9,24 @@ import (
 )
 
 type buffer struct {
-	data              []data.DataEventModel
-	lock              sync.Mutex
-	maxEventsToBuffer int
-	RetriesLeft       int
+	data        []data.DataEventModel
+	lock        sync.Mutex
+	Size        int
+	RetriesLeft int
 }
 
-func newBuffer(cnf config.Buffer) buffer {
-	return buffer{
-		data:              make([]data.DataEventModel, 0, cnf.Size),
-		maxEventsToBuffer: cnf.MaxEventsToBuffer,
-		RetriesLeft:       cnf.RetriesLeft,
-		lock:              sync.Mutex{},
+func newBuffer(cnf config.Buffer) *buffer {
+	if cnf.Size == 0 && cnf.LoopTimeout == 0 {
+		//буфер не создан и данные будут идти напрямую в бд
+		return &buffer{
+			Size: cnf.Size,
+		}
+	}
+	return &buffer{
+		data:        make([]data.DataEventModel, 0, cnf.Size),
+		Size:        cnf.Size,
+		RetriesLeft: cnf.RetriesLeft,
+		lock:        sync.Mutex{},
 	}
 }
 

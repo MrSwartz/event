@@ -1,14 +1,13 @@
 [Service]
 ExposeSwagger=true
 Port=8080
-ReadTimeout=10
+ReadTimeout=100
 WriteTimeout=120
-IdleTimeout=10
+IdleTimeout=100
 
 [Buffer]
-LoopTimeout=10
-Size=60000
-MaxEventsToBuffer=5
+LoopTimeout=6
+Size=10000
 
 [Database]
 DialTimeout=10

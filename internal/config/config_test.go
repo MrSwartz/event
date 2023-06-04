@@ -87,7 +87,6 @@ func TestReadConfig(t *testing.T) {
 
 	require.Equal(t, 3, cnf.Buffer.RetriesLeft)
 	require.Equal(t, 10, cnf.Buffer.LoopTimeout)
-	require.Equal(t, 5, cnf.Buffer.MaxEventsToBuffer)
 	require.Equal(t, 60000, cnf.Buffer.Size)
 
 	events := map[string]uint8{"app_start": 1, "onClose": 6, "onCreate": 4, "onDestroy": 5, "onPause": 2, "onRotate": 3, "panic": 7}
