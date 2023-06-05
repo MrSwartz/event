@@ -2,10 +2,11 @@ package eventservice
 
 import (
 	"context"
-	"event/internal/config"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/MrSwartz/event/internal/config"
 )
 
 type HttpSrv struct {

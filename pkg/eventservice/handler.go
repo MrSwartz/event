@@ -8,8 +8,8 @@ import (
 
 	_ "embed"
 
-	"event/internal/utils"
-	"event/pkg/eventservice/service"
+	"github.com/MrSwartz/event/internal/utils"
+	"github.com/MrSwartz/event/pkg/eventservice/service"
 
 	"github.com/flowchartsman/swaggerui"
 	"github.com/gorilla/mux"
@@ -114,5 +114,4 @@ func sendResponse(w http.ResponseWriter, msg string, code int) {
 	w.WriteHeader(code)
 	//nolint:errcheck
 	w.Write(body)
-
 }

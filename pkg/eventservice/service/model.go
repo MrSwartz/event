@@ -1,9 +1,10 @@
 package service
 
 import (
-	"event/internal/utils"
-	"event/pkg/eventservice/service/data"
 	"time"
+
+	"github.com/MrSwartz/event/internal/utils"
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/sirupsen/logrus"
 )

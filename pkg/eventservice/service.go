@@ -2,11 +2,12 @@ package eventservice
 
 import (
 	"context"
-	"event/internal/config"
-	"event/pkg/eventservice/service"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/MrSwartz/event/internal/config"
+	"github.com/MrSwartz/event/pkg/eventservice/service"
 
 	"github.com/sirupsen/logrus"
 )

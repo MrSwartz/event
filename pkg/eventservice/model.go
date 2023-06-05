@@ -1,8 +1,9 @@
 package eventservice
 
 import (
-	"event/pkg/eventservice/service"
 	"time"
+
+	"github.com/MrSwartz/event/pkg/eventservice/service"
 )
 
 type EventModel struct {
