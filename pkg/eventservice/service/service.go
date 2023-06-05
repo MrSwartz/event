@@ -169,22 +169,32 @@ func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
 func initMappers() {
 	// тут я сотворил грех и захардкодил, что неочень хорошо,
 	// но нужно срочно заканчивать сервис
-	osType["unsupported"] = 1
-	osType["ios"] = 2
-	osType["android"] = 3
+	osType = map[string]data.DeviceOS{
+		"unsupported": 1,
+		"ios":         2,
+		"android":     3,
+		"windows":     4,
+		"linux":       5,
+		"unix":        6,
+		"macos":       7,
+	}
 
-	osVersion["13.5.1"] = 11351
-	osVersion["13.5.2"] = 11352
-	osVersion["13.5.3"] = 11353
-	osVersion["4.4.4"] = 2444
-	osVersion["5.0.1"] = 2501
-	osVersion["10.0.1"] = 21001
+	osVersion = map[string]data.DeviceOSVersion{
+		"13.5.1": 11351,
+		"13.5.2": 11352,
+		"13.5.3": 11353,
+		"4.4.4":  2444,
+		"5.0.1":  2501,
+		"10.0.1": 21001,
+	}
 
-	eventType["app_start"] = 1
-	eventType["onPause"] = 2
-	eventType["onRotate"] = 3
-	eventType["onCreate"] = 4
-	eventType["onDestroy"] = 5
-	eventType["onClose"] = 6
-	eventType["panic"] = 7
+	eventType = map[string]data.EventType{
+		"app_start": 1,
+		"onPause":   2,
+		"onRotate":  3,
+		"onCreate":  4,
+		"onDestroy": 5,
+		"onClose":   6,
+		"panic":     7,
+	}
 }
