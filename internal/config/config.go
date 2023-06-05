@@ -44,20 +44,15 @@ type Buffer struct {
 }
 
 func ReadConfig() (*Config, error) {
-	cnf, err := readConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return cnf, nil
-}
-
-func readConfig() (*Config, error) {
 	configFile, err := readConfigName()
 	if err != nil {
 		return nil, err
 	}
 
+	return readConfig(configFile)
+}
+
+func readConfig(configFile string) (*Config, error) {
 	file, err := readFile(configFile)
 	if err != nil {
 		return nil, err

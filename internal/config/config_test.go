@@ -48,7 +48,7 @@ func TestReadConfig(t *testing.T) {
 	err = os.Setenv("CLICKHOUSE_USER", "test5")
 	require.NoError(t, err)
 
-	cnf, err := ReadConfig()
+	cnf, err := readConfig("../../cmd/config-test.toml")
 	require.NoError(t, err)
 	require.NotNil(t, cnf)
 

@@ -1,9 +1,0 @@
-{
-    "app_start": 1,
-    "onPause": 2,
-    "onRotate": 3,
-    "onCreate": 4,
-    "onDestroy": 5,
-    "onClose": 6,
-    "panic": 7
-}

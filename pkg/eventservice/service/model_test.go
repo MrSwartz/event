@@ -10,6 +10,7 @@ import (
 )
 
 func TestDataModelCast(t *testing.T) {
+	initMappers()
 	tests := []struct {
 		name          string
 		payload       ServiceEventModel
@@ -44,7 +45,8 @@ func TestDataModelCast(t *testing.T) {
 				Event:           eventType["app_start"],
 			},
 			isValid: true,
-		}, {
+		},
+		{
 			name: "invalid client time format",
 			payload: ServiceEventModel{
 				ServerTime: time.Date(2023, time.December, 1, 23, 59, 0, 0, time.UTC),
