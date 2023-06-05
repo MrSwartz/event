@@ -6,10 +6,12 @@ WriteTimeout=120
 IdleTimeout=100
 
 [Buffer]
-LoopTimeout=6
+RetriesLeft=3
+LoopTimeout=10
 Size=10000
 
 [Database]
+TableName="dev"
 DialTimeout=10
 MaxOpenConns=5
 MaxIdleConns=5

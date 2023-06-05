@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
-	"event/internal/config"
-	"event/pkg/eventservice/service/data"
 	"fmt"
 	"os"
 	"runtime/debug"
 	"time"
+
+	"github.com/MrSwartz/event/internal/config"
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/sirupsen/logrus"
 )
@@ -155,7 +156,7 @@ func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
 		buffer: newBuffer(cnf.Buffer),
 	}
 
-	initMappers(cnf.Mappers)
+	initMappers()
 
 	if cnf.Buffer.LoopTimeout != 0 && cnf.Buffer.Size != 0 {
 		logrus.Info("buffer initialized")
@@ -165,19 +166,25 @@ func NewService(ctx context.Context, cnf config.Config) (*Service, error) {
 	return srvc, nil
 }
 
-func initMappers(cnf config.Mappers) {
-	for k, v := range cnf.OsVersion {
-		osVersion[k] = data.DeviceOSVersion(v)
-	}
-	logrus.Infof("os version mapper initialized")
+func initMappers() {
+	// тут я сотворил грех и захардкодил, что неочень хорошо,
+	// но нужно срочно заканчивать сервис
+	osType["unsupported"] = 1
+	osType["ios"] = 2
+	osType["android"] = 3
 
-	for k, v := range cnf.DeviceOs {
-		osType[k] = data.DeviceOS(v)
-	}
-	logrus.Infof("device os mapper initialized")
+	osVersion["13.5.1"] = 11351
+	osVersion["13.5.2"] = 11352
+	osVersion["13.5.3"] = 11353
+	osVersion["4.4.4"] = 2444
+	osVersion["5.0.1"] = 2501
+	osVersion["10.0.1"] = 21001
 
-	for k, v := range cnf.Events {
-		eventType[k] = data.EventType(v)
-	}
-	logrus.Infof("events mapper initialized")
+	eventType["app_start"] = 1
+	eventType["onPause"] = 2
+	eventType["onRotate"] = 3
+	eventType["onCreate"] = 4
+	eventType["onDestroy"] = 5
+	eventType["onClose"] = 6
+	eventType["panic"] = 7
 }
