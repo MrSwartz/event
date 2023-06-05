@@ -2,11 +2,12 @@ package data
 
 import (
 	"context"
-	"event/internal/config"
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/MrSwartz/event/internal/config"
 
 	"github.com/stretchr/testify/require"
 )
@@ -18,6 +19,7 @@ func TestInsert(t *testing.T) {
 		Password:        os.Getenv("CLICKHOUSE_PASSWORD"), // "qwerty123"
 		Username:        os.Getenv("CLICKHOUSE_USER"),     // "default"
 		DBName:          os.Getenv("CLICKHOUSE_NAME"),     // "test"
+		TableName:       "test",
 		DialTimeout:     2,
 		MaxOpenConns:    2,
 		MaxIdleConns:    2,
@@ -36,14 +38,14 @@ func TestInsert(t *testing.T) {
 
 	err = db.db.Exec(
 		ctx,
-		fmt.Sprintf(createTemplate, cnf.DBName),
+		fmt.Sprintf(createTemplate, cnf.DBName, cnf.TableName),
 	)
 	require.NoError(t, err)
 
 	defer func() {
 		err = db.db.Exec(
 			ctx,
-			fmt.Sprintf(dropTemplate, cnf.DBName),
+			fmt.Sprintf(dropTemplate, cnf.DBName, cnf.TableName),
 		)
 		require.NoError(t, err)
 	}()
