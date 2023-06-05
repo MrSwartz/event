@@ -148,3 +148,27 @@ ok      github.com/MrSwartz/event/pkg/eventservice/service/data (cached)        
 В идеале нужно написать интеграционные тесты на эндпоинт и буфер.
 3) Сделал бы небольшой рефакторинг для верхних слоёв и подумал бы над интерфейсом для отправки в буфер(на случай если захочется его сменить/ поменять на kafka или SQS)
 4) Сделал бы систему сборки(github actions, для локального запуска docker-compose c запуском разных тулов типа vulncheck, golangci-linter)
+
+## Для запуска тестов
+```
+go mod tidy
+go mod vendor
+
+docker compose  -f "docker-compose-test.yml" up -d --build clickhouse
+
+export APP_ENV=dev
+export CLICKHOUSE_NAME=default            
+export CLICKHOUSE_HOST=127.0.0.1
+export CLICKHOUSE_PASSWORD=qwerty123
+export CLICKHOUSE_PORT=9000
+export CLICKHOUSE_USER=default
+
+go test ./... -cover -race
+```
+
+## Для запуска сервиса
+```
+go mod tidy
+go mod vendor
+docker compose -f "docker-compose.yml" up -d --build
+```

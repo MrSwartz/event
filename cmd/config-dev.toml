@@ -7,8 +7,8 @@ IdleTimeout=100
 
 [Buffer]
 RetriesLeft=3
-LoopTimeout=10
-Size=10000
+LoopTimeout=8
+Size=100000
 
 [Database]
 TableName="dev"
