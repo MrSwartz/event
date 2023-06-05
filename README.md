@@ -1,5 +1,5 @@
 ## О сервисе
-Сервис поднимает HTTP сервер, в котором который реализует эндпоинт обрабатывающий запросы позволяет сохранять тело запроса в ClickHouse.
+Сервис поднимает HTTP сервер, в котором который реализует эндпоинт позволяющий сохранять тело запроса в ClickHouse.
 ## Тесты
 Есть небольшое тестовое покрытие, в основном это /internal..., pkg/eventservice/service/data и функции не работающие с бд из /pkg...
 
@@ -8,16 +8,21 @@
 ## Пример использования
 Для старта и тестов нужно выпонить:
 ```
-export ENV=dev/test
+export APP_ENV=dev
 export CLICKHOUSE_NAME=default            
 export CLICKHOUSE_HOST=127.0.0.1
 export CLICKHOUSE_PASSWORD=qwerty123
 export CLICKHOUSE_PORT=9000
 export CLICKHOUSE_USER=default
 ```
+и запустить
+```
+go test ./... -cover -race
+```
 ## Результаты тестов
 При тестировании была поднята база в докере, а сервис был запущен нативно на MacOS 12.x.x M1+16GB Ram
 в момент тестирования ос слегка перегружена и 2.5GB лежит в свопе
+
 конфиг буфера:
 ```
 LoopTimeout=0
@@ -124,3 +129,46 @@ Percentage of the requests served within a certain time (ms)
 ```
 
 Играясь с настройками буфера можно подобрать более эффективные значения/нагрузку и получить прирост к скорости на несколько(а может и пару десятков) процентов
+
+Есть небольшое тестовое покрытие:
+```
+?       github.com/MrSwartz/event/cmd   [no test files]
+ok      github.com/MrSwartz/event/internal/config       (cached)        coverage: 50.0% of statements
+ok      github.com/MrSwartz/event/internal/utils        (cached)        coverage: 70.6% of statements
+ok      github.com/MrSwartz/event/pkg/eventservice      (cached)        coverage: 0.0% of statements
+ok      github.com/MrSwartz/event/pkg/eventservice/service      0.262s  coverage: 43.0% of statements
+ok      github.com/MrSwartz/event/pkg/eventservice/service/data (cached)        coverage: 72.2% of statements
+```
+
+Что бы я поменял/улучшил, если бы у меня было время:
+1) Буфер! Это важнейшая часть сервиса, которая позволяет повысить эффективность записи в ClickHouse. Это наиболее интересная часть. Но исходя из задания нет возможности выбрать правильное решение. Для выбора способа доставки данных нужно знать где будет работать сервис, например, моя реализация будет неплохо работать 
+на голом железе до определённых нагрузок, но если нагрузка вырастет, то лучше было бы переёти на kafka. Для AWS и аналогов использовать такой сервис не лучшая идея, там лучше использовать свои инструменты типа SQS или Redis. Тут[https://habr.com/ru/articles/514840/] есть рекомендации по использованию двойного буфера с
+переключением, возможно в моём случае было бы лучше, но я бы рассмотрел также возможность использования модифицироапнной версии ring buffer(подходящую для меня реализацию не нашёл, а писать и тестировать свою версию долго).
+2) Тестовое покрытие так себе, тесты написал на элементы кода которые вызывали бы у меня бесконечные проблемы при запуске сервиса.
+В идеале нужно написать интеграционные тесты на эндпоинт и буфер.
+3) Сделал бы небольшой рефакторинг для верхних слоёв и подумал бы над интерфейсом для отправки в буфер(на случай если захочется его сменить/ поменять на kafka или SQS)
+4) Сделал бы систему сборки(github actions, для локального запуска docker-compose c запуском разных тулов типа vulncheck, golangci-linter)
+
+## Для запуска тестов
+```
+go mod tidy
+go mod vendor
+
+docker compose  -f "docker-compose-test.yml" up -d --build clickhouse
+
+export APP_ENV=dev
+export CLICKHOUSE_NAME=default            
+export CLICKHOUSE_HOST=127.0.0.1
+export CLICKHOUSE_PASSWORD=qwerty123
+export CLICKHOUSE_PORT=9000
+export CLICKHOUSE_USER=default
+
+go test ./... -cover -race
+```
+
+## Для запуска сервиса
+```
+go mod tidy
+go mod vendor
+docker compose -f "docker-compose.yml" up -d --build
+```

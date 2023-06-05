@@ -1,9 +1,10 @@
 package config
 
 import (
-	"encoding/json"
+	"errors"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -14,6 +15,7 @@ type Clickhouse struct {
 	Username        string
 	Password        string
 	DBName          string
+	TableName       string
 	DialTimeout     uint32
 	MaxOpenConns    int
 	MaxIdleConns    int
@@ -33,7 +35,6 @@ type Config struct {
 	DataBase Clickhouse
 	Buffer   Buffer
 	Service  Service
-	Mappers  Mappers
 }
 
 type Buffer struct {
@@ -42,34 +43,16 @@ type Buffer struct {
 	Size        int
 }
 
-type Mappers struct {
-	Events    map[string]uint8
-	DeviceOs  map[string]uint8
-	OsVersion map[string]uint16
-}
-
 func ReadConfig() (*Config, error) {
-	cnf, err := readConfig()
+	configFile, err := readConfigName()
 	if err != nil {
 		return nil, err
 	}
 
-	mp, err := readMappers()
-	if err != nil {
-		return nil, err
-	}
-
-	cnf.Mappers = Mappers{
-		DeviceOs:  mp.DeviceOs,
-		OsVersion: mp.OsVersion,
-		Events:    mp.Events,
-	}
-	return cnf, nil
+	return readConfig(configFile)
 }
 
-func readConfig() (*Config, error) {
-	configFile := "../cmd/config-" + os.Getenv("ENV") + ".toml"
-
+func readConfig(configFile string) (*Config, error) {
 	file, err := readFile(configFile)
 	if err != nil {
 		return nil, err
@@ -91,48 +74,6 @@ func readConfig() (*Config, error) {
 	return &cnf, nil
 }
 
-func readMappers() (*Mappers, error) {
-
-	devos := "../mappers/device_os.json"
-	file, err := readFile(devos)
-	if err != nil {
-		return nil, err
-	}
-
-	mapDevOs := make(map[string]uint8)
-	if err := json.Unmarshal(file, &mapDevOs); err != nil {
-		return nil, err
-	}
-
-	events := "../mappers/events.json"
-	file, err = readFile(events)
-	if err != nil {
-		return nil, err
-	}
-
-	mapEvents := make(map[string]uint8)
-	if err := json.Unmarshal(file, &mapEvents); err != nil {
-		return nil, err
-	}
-
-	osver := "../mappers/os_version.json"
-	file, err = readFile(osver)
-	if err != nil {
-		return nil, err
-	}
-
-	mapOsVer := make(map[string]uint16)
-	if err := json.Unmarshal(file, &mapOsVer); err != nil {
-		return nil, err
-	}
-
-	return &Mappers{
-		DeviceOs:  mapDevOs,
-		OsVersion: mapOsVer,
-		Events:    mapEvents,
-	}, nil
-}
-
 func readFile(fname string) ([]byte, error) {
 	file, err := os.Open(fname)
 	if err != nil {
@@ -142,4 +83,22 @@ func readFile(fname string) ([]byte, error) {
 	defer file.Close()
 
 	return io.ReadAll(file)
+}
+
+func readConfigName() (string, error) {
+	args := os.Args
+	if len(args) == 2 {
+		if !strings.HasPrefix(args[1], "--cfg=") {
+			return "", errors.New("invalid command")
+		}
+
+		configName, ok := strings.CutPrefix(args[1], "--cfg=")
+		if !ok {
+			return "", errors.New("can't extract config name")
+		}
+
+		return configName, nil
+	}
+
+	return "", errors.New("try to use ./binary --cfg=config-env.toml")
 }

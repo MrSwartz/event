@@ -1,22 +1,16 @@
 package service
 
 import (
-	"event/internal/config"
-	"event/pkg/eventservice/service/data"
 	"testing"
 	"time"
+
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestDataModelCast(t *testing.T) {
-
-	initMappers(config.Mappers{
-		Events:    map[string]uint8{"app_start": 1, "onClose": 6, "onCreate": 4, "onDestroy": 5, "onPause": 2, "onRotate": 3, "panic": 7},
-		DeviceOs:  map[string]uint8{"android": 3, "ios": 2, "linux": 5, "macos": 7, "unix": 6, "unsupported": 1, "windows": 4},
-		OsVersion: map[string]uint16{"10.0.1": 0x5209, "13.5.1": 0x2c57, "13.5.2": 0x2c58, "13.5.3": 0x2c59, "4.4.4": 0x98c, "5.0.1": 0x9c5},
-	})
-
+	initMappers()
 	tests := []struct {
 		name          string
 		payload       ServiceEventModel
@@ -51,7 +45,8 @@ func TestDataModelCast(t *testing.T) {
 				Event:           eventType["app_start"],
 			},
 			isValid: true,
-		}, {
+		},
+		{
 			name: "invalid client time format",
 			payload: ServiceEventModel{
 				ServerTime: time.Date(2023, time.December, 1, 23, 59, 0, 0, time.UTC),

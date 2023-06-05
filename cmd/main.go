@@ -1,9 +1,10 @@
 package main
 
 import (
-	"event/pkg/eventservice"
 	"fmt"
 	"os"
+
+	"github.com/MrSwartz/event/pkg/eventservice"
 )
 
 func main() {

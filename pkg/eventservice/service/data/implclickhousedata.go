@@ -22,7 +22,7 @@ const (
 		ответ: я незнаю какие именно будут составляться запросы, поэтому выбрал произвольно
 	*/
 	createTemplate = `
-	CREATE TABLE IF NOT EXISTS %s
+	CREATE TABLE IF NOT EXISTS %s.%s
 	(
 		client_time 		DateTime('UTC'),
 		server_time 		DateTime('UTC'),
@@ -41,7 +41,7 @@ const (
 	`
 
 	insertQuery = `
-	INSERT INTO %s (
+	INSERT INTO %s.%s (
 		client_time, 
 		server_time, 
 		device_id, 
@@ -56,7 +56,7 @@ const (
 		)`
 
 	//nolint:unused
-	dropTemplate = `DROP TABLE IF EXISTS %s`
+	dropTemplate = `DROP TABLE IF EXISTS %s.%s`
 )
 
 type Events interface {
@@ -66,7 +66,7 @@ type Events interface {
 }
 
 func (c *ChClient) Insert(ctx context.Context, rows []DataEventModel) error {
-	batch, err := c.db.PrepareBatch(ctx, fmt.Sprintf(insertQuery, c.tableName))
+	batch, err := c.db.PrepareBatch(ctx, fmt.Sprintf(insertQuery, c.dbName, c.tableName))
 	if err != nil {
 		return err
 	}

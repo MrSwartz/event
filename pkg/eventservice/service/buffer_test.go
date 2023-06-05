@@ -1,9 +1,10 @@
 package service
 
 import (
-	"event/internal/config"
-	"event/pkg/eventservice/service/data"
 	"testing"
+
+	"github.com/MrSwartz/event/internal/config"
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/stretchr/testify/require"
 )

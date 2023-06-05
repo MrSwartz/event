@@ -2,9 +2,10 @@ package data
 
 import (
 	"context"
-	"event/internal/config"
 	"fmt"
 	"time"
+
+	"github.com/MrSwartz/event/internal/config"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
@@ -13,6 +14,7 @@ import (
 type ChClient struct {
 	db        driver.Conn
 	tableName string
+	dbName    string
 }
 
 func NewClickHouseDB(ctx context.Context, c config.Clickhouse) (*ChClient, error) {
@@ -39,12 +41,13 @@ func NewClickHouseDB(ctx context.Context, c config.Clickhouse) (*ChClient, error
 	}
 
 	// не лучшая идея, но так проще сделать первый запуск сервиса когда ещё не создана таблица
-	if err := conn.Exec(ctx, fmt.Sprintf(createTemplate, c.DBName)); err != nil {
+	if err := conn.Exec(ctx, fmt.Sprintf(createTemplate, c.DBName, c.TableName)); err != nil {
 		return nil, err
 	}
 
 	return &ChClient{
 		db:        conn,
-		tableName: c.DBName,
+		tableName: c.TableName,
+		dbName:    c.DBName,
 	}, nil
 }

@@ -1,9 +1,10 @@
 package service
 
 import (
-	"event/internal/utils"
-	"event/pkg/eventservice/service/data"
 	"time"
+
+	"github.com/MrSwartz/event/internal/utils"
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/sirupsen/logrus"
 )
@@ -68,12 +69,13 @@ func (e ServiceEventModel) toDataModel() (*data.DataEventModel, bool) {
 
 	os, version, err := utils.SplitOsAndVersion(e.DeviceOs)
 	if err != nil {
-		logrus.Errorf("can't extract os and version from incoming data: %v", e.DeviceId)
+		logrus.Errorf("can't extract os and version from incoming data: %v", e.DeviceOs)
 		return nil, false
 	}
 
 	osCode, ok := osType[os]
 	if !ok {
+		logrus.Printf("my: %v, list: %v", version, osType)
 		logrus.Errorf("os not supported: %v", version)
 		return nil, false
 	}

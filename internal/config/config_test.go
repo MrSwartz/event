@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -30,23 +29,8 @@ func TestReadFile(t *testing.T) {
 	require.Equal(t, "open ./data/notexists.json: no such file or directory", err.Error())
 }
 
-func TestReadMappers(t *testing.T) {
-	mappers, err := readMappers()
-	require.NoError(t, err)
-	require.NotNil(t, mappers)
-
-	events := map[string]uint8{"app_start": 1, "onClose": 6, "onCreate": 4, "onDestroy": 5, "onPause": 2, "onRotate": 3, "panic": 7}
-	require.Equal(t, fmt.Sprintf("%v", events), fmt.Sprintf("%v", mappers.Events))
-
-	deviceOs := map[string]uint8{"android": 3, "ios": 2, "linux": 5, "macos": 7, "unix": 6, "unsupported": 1, "windows": 4}
-	require.Equal(t, fmt.Sprintf("%v", deviceOs), fmt.Sprintf("%v", mappers.DeviceOs))
-
-	osVersion := map[string]uint16{"10.0.1": 0x5209, "13.5.1": 0x2c57, "13.5.2": 0x2c58, "13.5.3": 0x2c59, "4.4.4": 0x98c, "5.0.1": 0x9c5}
-	require.Equal(t, fmt.Sprintf("%v", osVersion), fmt.Sprintf("%v", mappers.OsVersion))
-}
-
 func TestReadConfig(t *testing.T) {
-	err := os.Setenv("ENV", "test")
+	err := os.Setenv("APP_ENV", "test")
 	require.NoError(t, err)
 
 	err = os.Setenv("CLICKHOUSE_NAME", "test1")
@@ -64,7 +48,7 @@ func TestReadConfig(t *testing.T) {
 	err = os.Setenv("CLICKHOUSE_USER", "test5")
 	require.NoError(t, err)
 
-	cnf, err := ReadConfig()
+	cnf, err := readConfig("../../cmd/config-test.toml")
 	require.NoError(t, err)
 	require.NotNil(t, cnf)
 
@@ -89,12 +73,4 @@ func TestReadConfig(t *testing.T) {
 	require.Equal(t, 10, cnf.Buffer.LoopTimeout)
 	require.Equal(t, 60000, cnf.Buffer.Size)
 
-	events := map[string]uint8{"app_start": 1, "onClose": 6, "onCreate": 4, "onDestroy": 5, "onPause": 2, "onRotate": 3, "panic": 7}
-	require.Equal(t, fmt.Sprintf("%v", events), fmt.Sprintf("%v", cnf.Mappers.Events))
-
-	deviceOs := map[string]uint8{"android": 3, "ios": 2, "linux": 5, "macos": 7, "unix": 6, "unsupported": 1, "windows": 4}
-	require.Equal(t, fmt.Sprintf("%v", deviceOs), fmt.Sprintf("%v", cnf.Mappers.DeviceOs))
-
-	osVersion := map[string]uint16{"10.0.1": 0x5209, "13.5.1": 0x2c57, "13.5.2": 0x2c58, "13.5.3": 0x2c59, "4.4.4": 0x98c, "5.0.1": 0x9c5}
-	require.Equal(t, fmt.Sprintf("%v", osVersion), fmt.Sprintf("%v", cnf.Mappers.OsVersion))
 }

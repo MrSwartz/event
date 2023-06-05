@@ -1,9 +1,10 @@
 package service
 
 import (
-	"event/internal/config"
-	"event/pkg/eventservice/service/data"
 	"sync"
+
+	"github.com/MrSwartz/event/internal/config"
+	"github.com/MrSwartz/event/pkg/eventservice/service/data"
 
 	"github.com/sirupsen/logrus"
 )
@@ -20,9 +21,7 @@ type buffer struct {
 func newBuffer(cnf config.Buffer) *buffer {
 	if cnf.Size == 0 && cnf.LoopTimeout == 0 {
 		// буфер не создан и данные будут идти напрямую в бд
-		return &buffer{
-			Size: cnf.Size,
-		}
+		return nil
 	}
 	return &buffer{
 		data:        make([]data.DataEventModel, 0, cnf.Size),
